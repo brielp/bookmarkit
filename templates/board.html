@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block CONTENT %}
+
+<div class="container">
+    <small><a href="/"><--Back to Boards</a></small>
+    <h2>{{ board.title }}</h2>
+    <p>Posts below:</p>
+    {% for post in posts %}
+        <div class="col-4 border">
+            <img src="{{ post.image_url }}" alt="">
+            <h4><a href="{{ post.url }}" target="_blank">{{ post.title }}</a></h4>
+            <p>{{ post.description }}</p>
+            {% if post.completed == False %}
+            <small>Not Completed</small>
+            <small><a href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete">Mark Completed</a></small>
+            {% else %}
+            <small>Completed</small>
+            <small><a href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete">Mark incomplete</a></small>
+            {% endif %}
+            {% if post.complete_by %}
+            <p>Complete by: {{ post.complete_by }}</p>
+            {% endif %}
+
+        </div>
+    {% endfor %}
+    <button>Add Post</button>
+    <form action="/boards/{{ board.id }}/posts/add", method="POST">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type != 'hidden' %}
+            {% for error in field.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+            {{ field.label }}
+            {{ field(class="form-control") }}
+        {% endfor %}
+        <button>Add</button>
+    </form>
+</div>
+
+
+
+{% endblock %}

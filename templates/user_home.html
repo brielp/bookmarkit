@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block CONTENT %}
+
+<div class="container">
+    <h2>Hi, {{ g.user.first_name }}!</h2>
+    <p>Boards below:</p>
+    {% for board in g.user.boards %}
+        <div class="col-4 border">
+            <h4><a href="/boards/{{ board.id }}">{{ board.title }}</a></h4>
+            <p>{{ board.description }}</p>
+        </div>
+    {% endfor %}
+    <button>Add board</button>
+    <form action="/boards/add", method="POST">
+        {{ form.hidden_tag() }}
+        {% for field in form if field.widget.input_type != 'hidden' %}
+            {% for error in field.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+            {{ field.label }}
+            {{ field(class="form-control") }}
+        {% endfor %}
+        <button>Add</button>
+    </form>
+</div>
+
+
+
+{% endblock %}

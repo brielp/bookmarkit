@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookmarkIt</title>
+
+    <link rel="stylesheet"
+        href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
+    <script src="https://unpkg.com/jquery"></script>
+    <script src="https://unpkg.com/popper"></script>
+    <script src="https://unpkg.com/bootstrap"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+        <div class="container-fluid">
+            <div class="navbar-header">
+            <a href="/" class="navbar-brand">
+                <span>BookmarkIt</span>
+            </a>
+            </div>
+            <ul class="nav navbar-nav navbar-right">
+                {% if not g.user %}
+                <li class="nav-link"><a href="/signup">Sign up</a></li>
+                <li class="nav-link"><a href="/login">Log in</a></li>
+                {% else %}
+                <li class="nav-item text-white">Welcome, {{ g.user.first_name }}!</li>
+                <li class="nav-link"><a href="/logout">Logout</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% for category, message in get_flashed_messages(with_categories=True) %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+
+    {% block CONTENT %}
+    {% endblock %}
+    
+</body>
+</html>
