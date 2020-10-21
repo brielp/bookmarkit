@@ -2,41 +2,87 @@
 {% block CONTENT %}
 
 <div class="container">
-    <small><a href="/"><--Back to Boards</a></small>
-    <h2>{{ board.title }}</h2>
-    <p>Posts below:</p>
+    <div class="my-4">
+        <small class="d-block"><a href="/"><--Back to Boards</a></small>
+            <h2 class="display-4 d-inline">{{ board.title }}</h2>
+            <button class="btn btn-primary mb-4 mx-3" data-toggle="collapse" href="#collapseForm" role="button" aria-expanded="false" aria-controls="collapseForm">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div class="collapse" id="collapseForm">
+                <form class="form-inline" action="/boards/{{ board.id }}/posts/add", method="POST">
+                    {{ form.hidden_tag() }}
+                    {% for field in form if field.widget.input_type != 'hidden' %}
+                        <div class="form-group my-3 mr-4">
+                            {{ field.label }}
+                            {{ field(class="form-control ml-1") }}
+                            {% for error in field.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                
+                    {% endfor %}
+        
+                    <button type="submit" class="btn btn-primary">Add</button>        
+                </form>
+            </div>
+    </div>
+    
+    <div class="row">
     {% for post in posts %}
-        <div class="col-4 border">
-            <img src="{{ post.image_url }}" alt="">
-            <h4><a href="{{ post.url }}" target="_blank">{{ post.title }}</a></h4>
-            <p>{{ post.description }}</p>
-            {% if post.completed == False %}
-            <small>Not Completed</small>
-            <small><a href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete">Mark Completed</a></small>
-            {% else %}
-            <small>Completed</small>
-            <small><a href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete">Mark incomplete</a></small>
-            {% endif %}
-            {% if post.complete_by %}
-            <p>Complete by: {{ post.complete_by }}</p>
-            {% endif %}
-
+        <div class="col-md-6 col-lg-4">
+            <div class="card mb-3">
+                <img class="card-img-top" src="{{ post.image_url }}" alt="Card image cap">
+                <div class="card-body">
+                    <h4><a href="{{ post.url }}" target="_blank" class="card-title">{{ post.title }}</a></h4>
+                    <p class="card-text">{{ post.description }}</p>
+                    {% if post.complete_by %}
+                        <small class="card-text text-muted">Due: {{ post.complete_by }}</small>
+                    {% endif %}
+                    <div class="float-right">
+                        <div class="dropdown">
+                            <a class="btn btn-outline-dark btn-sm dropdown-toggle pl-1 py-0" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            </a>                          
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <a class="dropdown-item" href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete"><i class="far fa-check-circle"></i> Mark Complete</a>
+                                <a class="dropdown-item" href="/boards/{{board.id}}/posts/{{post.id}}/edit"><i class="fas fa-edit"></i> Edit Due Date</a>
+                                <a class="dropdown-item" href="/boards/{{board.id}}/posts/{{post.id}}/delete"><i class="far fa-trash-alt"></i> Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>    
+            </div>
         </div>
     {% endfor %}
-    <button>Add Post</button>
-    <form action="/boards/{{ board.id }}/posts/add", method="POST">
-        {{ form.hidden_tag() }}
-        {% for field in form if field.widget.input_type != 'hidden' %}
-            {% for error in field.errors %}
-                <span class="text-danger">{{ error }}</span>
-            {% endfor %}
-            {{ field.label }}
-            {{ field(class="form-control") }}
+
+    </div>
+    <hr>
+    {% if completed_posts %}
+    <h4 class="text-muted mb-4 mt-5">Completed Bookmarks</h4>
+    <div class="row">
+        {% for post in completed_posts %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card mb-3">
+                    <img class="card-img-top" src="{{ post.image_url }}" alt="Card image cap">
+                    <div class="card-body">
+                        <h4><a href="{{ post.url }}" target="_blank" class="card-title">{{ post.title }}</a></h4>
+                        <p class="card-text">{{ post.description }}</p>                 
+                        <small><i class="fas fa-check-circle text-success"></i> Completed</small>
+                        <div class="float-right">
+                            <div class="dropdown">
+                                <a class="btn btn-outline-dark btn-sm dropdown-toggle pl-1 py-0" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                </a>                          
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                    <a class="dropdown-item" href="/boards/{{board.id}}/posts/{{post.id}}/toggle_complete"><i class="fas fa-list-ul"></i> Mark Incomplete</a>
+                                    <a class="dropdown-item" href="/boards/{{board.id}}/posts/{{post.id}}/delete"><i class="far fa-trash-alt"></i> Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+                </div>
+            </div>
         {% endfor %}
-        <button>Add</button>
-    </form>
+        </div>
+        {% endif %}
 </div>
-
-
 
 {% endblock %}

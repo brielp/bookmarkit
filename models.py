@@ -15,7 +15,6 @@ class User(db.Model):
     username = db.Column(db.Text, nullable=False, unique=True)
     first_name = db.Column(db.Text)
     last_name = db.Column(db.Text)
-    email = db.Column(db.Text, nullable=False)
     password = db.Column(db.Text, nullable=False)
 
     boards = db.relationship('Board')
@@ -24,7 +23,7 @@ class User(db.Model):
         return f"<User #{self.id}: Name: {self.first_name} {self.last_name}. Username: {self.username}>"
 
     @classmethod
-    def signup(cls, first_name, last_name, username, email, password):
+    def signup(cls, first_name, last_name, username, password):
         """ Sign up a user. Hash password and add to db session."""
 
         hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
@@ -34,7 +33,6 @@ class User(db.Model):
             last_name=last_name,
             username=username,
             password=hashed_pwd,
-            email=email
         )
 
         db.session.add(user)
@@ -62,7 +60,7 @@ class Board(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
 
     posts = db.relationship("Post")
 
@@ -78,7 +76,7 @@ class Post(db.Model):
     image_url = db.Column(db.Text, nullable=False)
     complete_by = db.Column(db.DateTime)
     completed = db.Column(db.Boolean, nullable=False, default=False)
-    board_id = db.Column(db.Integer, db.ForeignKey('boards.id', ondelete='cascade'), nullable=False)
+    board_id = db.Column(db.Integer, db.ForeignKey('boards.id', ondelete='cascade'))
 
 
 def connect_db(app):

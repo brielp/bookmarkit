@@ -2,28 +2,54 @@
 {% block CONTENT %}
 
 <div class="container">
-    <h2>Hi, {{ g.user.first_name }}!</h2>
-    <p>Boards below:</p>
-    {% for board in g.user.boards %}
-        <div class="col-4 border">
-            <h4><a href="/boards/{{ board.id }}">{{ board.title }}</a></h4>
-            <p>{{ board.description }}</p>
+    <div class="mt-4 mb-3">
+            <h2 class="display-4 mb-4">Hi, {{ g.user.first_name }}!</h2>
+            <h3 class="d-inline">All Boards</h3>
+            <button class="btn btn-primary btn-sm mb-2 mx-3" data-toggle="collapse" href="#collapseForm" role="button" aria-expanded="false" aria-controls="collapseForm">
+                <i class="fas fa-plus"></i>
+            </button>
+            <div class="collapse" id="collapseForm">
+                <form class="form-inline" action="/boards/add", method="POST">
+                    {{ form.hidden_tag() }}
+                    {% for field in form if field.widget.input_type != 'hidden' %}
+                        <div class="form-group my-3 mr-4">
+                            {{ field.label }}
+                            {{ field(class="form-control ml-1") }}
+                            {% for error in field.errors %}
+                            <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                
+                    {% endfor %}
+        
+                    <button type="submit" class="btn btn-primary">Add</button>        
+                </form>
+            </div>
+    </div>
+    
+    <div class="row">
+        {% for board in g.user.boards %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ board.title }}</h5>
+                    <p class="card-text">{{ board.description }}</p>
+                    <a href="/boards/{{ board.id }}" class="btn btn-outline-primary btn-sm"><i class="far fa-bookmark"></i> View Bookmarks</a>
+                    <div class="float-right">
+                        <div class="dropdown">
+                            <a class="btn btn-outline-dark btn-sm dropdown-toggle pl-1 py-0" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            </a>                          
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <a class="dropdown-item" href="/boards/{{board.id}}/edit"><i class="fas fa-edit"></i> Edit Board</a>
+                                <a class="dropdown-item" href="/boards/{{board.id}}/delete"><i class="far fa-trash-alt"></i> Delete</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     {% endfor %}
-    <button>Add board</button>
-    <form action="/boards/add", method="POST">
-        {{ form.hidden_tag() }}
-        {% for field in form if field.widget.input_type != 'hidden' %}
-            {% for error in field.errors %}
-                <span class="text-danger">{{ error }}</span>
-            {% endfor %}
-            {{ field.label }}
-            {{ field(class="form-control") }}
-        {% endfor %}
-        <button>Add</button>
-    </form>
-</div>
-
+    </div>
 
 
 {% endblock %}

@@ -9,7 +9,7 @@ db.drop_all()
 db.create_all()
 
 
-u1 = User.signup("Bob", "Dillon", "bdillon5", "bob@bob.com", "Ieatchickens")
+u1 = User.signup("Bob", "Dillon", "bdillon5", "Ieatchickens")
 
 u1.id = 3838
 

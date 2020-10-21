@@ -9,7 +9,6 @@ class SignupForm(FlaskForm):
 
     first_name = StringField("First Name", validators=[DataRequired()])
     last_name = StringField("Last Name", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired()])
     username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired(), Length(min=6)])
 
@@ -28,8 +27,13 @@ class AddBoardForm(FlaskForm):
 class AddPostForm(FlaskForm):
     """ Add new post based off URL """
 
-    url = StringField('URL', validators=[
+    url = StringField('URL:', validators=[
         DataRequired('URL is required'),
         Regexp('^(http|https):\/\/[\w.\-]+(\.[\w.\-]+)+.*$', 0,
                'URL must be a valid link')])
+    complete_by = DateField("Due Date (Optional):", validators=[Optional()])
+
+class EditPostForm(FlaskForm):
+    """ Edit existing post """
+
     complete_by = DateField("Date Due", validators=[Optional()])

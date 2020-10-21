@@ -7,9 +7,11 @@
 
     <link rel="stylesheet"
         href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
-    <script src="https://unpkg.com/jquery"></script>
-    <script src="https://unpkg.com/popper"></script>
-    <script src="https://unpkg.com/bootstrap"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="./static/style.css">
 </head>
 <body>
 
@@ -17,16 +19,17 @@
         <div class="container-fluid">
             <div class="navbar-header">
             <a href="/" class="navbar-brand">
+                <span><i class="far fa-bookmark pr-1"></i></span>
                 <span>BookmarkIt</span>
             </a>
             </div>
             <ul class="nav navbar-nav navbar-right">
                 {% if not g.user %}
-                <li class="nav-link"><a href="/signup">Sign up</a></li>
-                <li class="nav-link"><a href="/login">Log in</a></li>
+                <li class="nav-item"><a class="nav-link" href="/signup"><i class="fas fa-user-plus"></i> Sign up</a></li>
+                <li class="nav-item"><a class="nav-link" href="/login"><i class="fas fa-user"></i> Log in</a></li>
                 {% else %}
-                <li class="nav-item text-white">Welcome, {{ g.user.first_name }}!</li>
-                <li class="nav-link"><a href="/logout">Logout</a></li>
+                <li class="navbar-text text-light pr-2">Welcome, {{ g.user.first_name }}!</li>
+                <li class="nav-item text-light"><a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -34,7 +37,7 @@
 
     <div class="container">
         {% for category, message in get_flashed_messages(with_categories=True) %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+        <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
         {% endfor %}
     </div>
 

@@ -1,11 +1,11 @@
 from flask import Flask, render_template, redirect, request, flash, session, g
 from flask_debugtoolbar import DebugToolbarExtension
-from forms import SignupForm, LoginForm, AddBoardForm, AddPostForm
-import requests
+from forms import SignupForm, LoginForm, AddBoardForm, AddPostForm, EditPostForm
 from sqlalchemy.exc import IntegrityError
 from models import db, connect_db, User, Post, Board
 from datetime import date, datetime
 from secrets import API_KEY, default_image_url
+import requests
 
 app = Flask(__name__)
 
@@ -21,6 +21,7 @@ toolbar = DebugToolbarExtension(app)
 connect_db(app)
 
 
+#Route Setup 
 @app.before_request
 def add_user_to_g():
     """ If logged in, add current user to global Flask variable """
@@ -32,6 +33,7 @@ def add_user_to_g():
         g.user = None
 
 
+# Functions
 def do_login(user):
     """ login user into session """
 
@@ -49,6 +51,7 @@ def readable_date(list):
                 post.complete_by = post.complete_by.strftime("%A %b %d, %Y")
         return list
 
+# HOME route
 
 @app.route("/")
 def home_page():
@@ -58,8 +61,12 @@ def home_page():
     else:     
         return render_template('home.html')
 
+
+# USER Routes
+
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    """ Sign up user and save credentials """
     form = SignupForm()
 
     if form.validate_on_submit():
@@ -68,8 +75,7 @@ def signup():
                 first_name=form.first_name.data,
                 last_name = form.last_name.data,
                 username=form.username.data,
-                password=form.password.data,
-                email=form.email.data
+                password=form.password.data
             )
 
             user_board = Board(title="General", description="A general hodge-podge of articles and ideas")
@@ -89,8 +95,9 @@ def signup():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    form = LoginForm()
+    """ Log user into session and check credentials"""
 
+    form = LoginForm()
     if form.validate_on_submit():
         user = User.authenticate(username=form.username.data, password=form.password.data)
 
@@ -106,26 +113,97 @@ def login():
 
 @app.route("/logout")
 def logout():
+    """ Log user out of session """
     do_logout()
-    flash("Logged Out.", "success")
     return redirect("/")
 
 
+
+#BOARD routes
+
 @app.route("/boards/<int:board_id>")
 def show_board(board_id):
+    """ Show board and posts on board """
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     form = AddPostForm()
     board = Board.query.get_or_404(board_id)
-    posts = Post.query.filter_by(board_id=board_id).all()
-    dated_posts = readable_date(posts)    
+    incomplete_posts = Post.query.filter(Post.board_id == board_id, Post.completed == False).order_by(Post.complete_by).all()
+    completed_posts = Post.query.filter(Post.board_id == board_id, Post.completed == True).all()
+    dated_posts = readable_date(incomplete_posts)   
 
-    return render_template('board.html', board=board, form=form, posts=dated_posts)
+    return render_template('board.html', board=board, form=form, posts=dated_posts, completed_posts=completed_posts)
+
+@app.route("/boards/add", methods=["POST"])
+def add_board():
+    """ Add new board """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = AddBoardForm(request.form)
+
+    if form.validate_on_submit():
+        board = Board(title=form.title.data, description=form.description.data, user_id=g.user.id)
+        db.session.add(board)
+        db.session.commit()
+
+        return redirect("/")
+
+    else:
+        return render_template("user_home.html", form=form)
+
+@app.route("/boards/<int:board_id>/edit", methods=["GET", "POST"])
+def edit_board(board_id):
+    """ Edit existing board """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    board = Board.query.get_or_404(board_id)
+    form = AddBoardForm(obj=board)
+
+    if form.validate_on_submit():
+        board.title = form.title.data
+        board.description = form.description.data
+
+        db.session.add(board)
+        db.session.commit()
+
+        return redirect("/")
+    
+    else:
+        return render_template('edit_board.html', board=board, form=form)
+
+@app.route("/boards/<int:board_id>/delete")
+def delete_board(board_id):
+    """ Delete existing board"""
+
+    board = Board.query.get_or_404(board_id)
+
+    if not g.user or board.user_id != g.user.id:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    
+    db.session.delete(board)
+    db.session.commit()
+
+    return redirect("/")
+
+
+
+#POST/BOOKMARK routes
 
 @app.route("/boards/<int:board_id>/posts/add", methods=["POST"])
 def add_post(board_id):
+    """ Add a post to a board, make request to LinkPreview API """
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -165,10 +243,15 @@ def add_post(board_id):
         return redirect(f"/boards/{board_id}")
 
     board = Board.query.get_or_404(board_id)
-    return render_template('board.html', form=form, board=board)
+    posts = Post.query.filter_by(board_id=board_id).all()
+    dated_posts = readable_date(posts)    
+
+    return render_template('board.html', board=board, form=form, posts=dated_posts)
 
 @app.route("/boards/<int:board_id>/posts/<int:post_id>/toggle_complete")
 def toggle_completed(board_id, post_id):
+    """ Toggle post completion and save to database """
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -185,20 +268,39 @@ def toggle_completed(board_id, post_id):
 
     return redirect(f"/boards/{board_id}")
 
-@app.route("/boards/add", methods=["POST"])
-def add_board():
+@app.route("/boards/<int:board_id>/posts/<int:post_id>/edit", methods=["GET", "POST"])
+def edit_post(board_id, post_id):
+    """ Edit or add post due date """
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
-
-    form = AddBoardForm(request.form)
+    
+    post = Post.query.get_or_404(post_id)
+    form = EditPostForm(obj=post)
 
     if form.validate_on_submit():
-        board = Board(title=form.title.data, description=form.description.data, user_id=g.user.id)
-        db.session.add(board)
+        post.complete_by = form.complete_by.data
+        db.session.add(post)
         db.session.commit()
 
+        return redirect(f"/boards/{board_id}")
+    
+    else:
+        return render_template('edit_post.html', form=form, post=post)
+
+
+@app.route("/boards/<int:board_id>/posts/<int:post_id>/delete")
+def delete_post(board_id, post_id):
+    """ Delete Post """
+    board = Board.query.get_or_404(board_id)
+
+    if not g.user or board.user_id != g.user.id:
+        flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    else:
-        return "error"
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect(f"/boards/{board_id}")
