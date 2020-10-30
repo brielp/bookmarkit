@@ -139,13 +139,14 @@ def logout():
 @app.route("/boards/<int:board_id>")
 def show_board(board_id):
     """ Show board and posts on board """
+    board = Board.query.get_or_404(board_id)
 
-    if not g.user:
+    if not g.user or g.user.id != board.user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     form = AddPostForm()
-    board = Board.query.get_or_404(board_id)
+    
     incomplete_posts = Post.query.filter(Post.board_id == board_id, Post.completed == False).order_by(Post.complete_by).all()
     completed_posts = Post.query.filter(Post.board_id == board_id, Post.completed == True).all()
     dated_posts = readable_date(incomplete_posts)
@@ -176,8 +177,9 @@ def add_board():
 @app.route("/boards/<int:board_id>/edit", methods=["GET", "POST"])
 def edit_board(board_id):
     """ Edit existing board """
+    board = Board.query.get_or_404(board_id)
 
-    if not g.user:
+    if not g.user or g.user.id != board.user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -220,8 +222,9 @@ def delete_board(board_id):
 @app.route("/boards/<int:board_id>/posts/add", methods=["POST"])
 def add_post(board_id):
     """ Add a post to a board, make request to LinkPreview API """
+    board = Board.query.get_or_404(board_id)
 
-    if not g.user:
+    if not g.user or board.user_id != g.user.id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -259,7 +262,6 @@ def add_post(board_id):
 
         return redirect(f"/boards/{board_id}")
 
-    board = Board.query.get_or_404(board_id)
     posts = Post.query.filter_by(board_id=board_id).all()
     dated_posts = readable_date(posts)    
 
@@ -268,8 +270,9 @@ def add_post(board_id):
 @app.route("/boards/<int:board_id>/posts/<int:post_id>/toggle_complete")
 def toggle_completed(board_id, post_id):
     """ Toggle post completion and save to database """
+    board = Board.query.get_or_404(board_id)
 
-    if not g.user:
+    if not g.user or g.user.id != board.user_id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -288,8 +291,9 @@ def toggle_completed(board_id, post_id):
 @app.route("/boards/<int:board_id>/posts/<int:post_id>/edit", methods=["GET", "POST"])
 def edit_post(board_id, post_id):
     """ Edit or add post due date """
+    board = Board.query.get_or_404(board_id)
 
-    if not g.user:
+    if not g.user or board.user_id != g.user.id:
         flash("Access unauthorized.", "danger")
         return redirect("/")
     
