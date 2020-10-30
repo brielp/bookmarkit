@@ -2,7 +2,7 @@
 
 Brielle's Springboard Capstone Project #1
 
-Deployed: 
+Deployed: https://bookmarkit-brielle.herokuapp.com/
 
 API: LinkPreview
 

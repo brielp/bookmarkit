@@ -11,7 +11,7 @@ import os
 app = Flask(__name__)
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost:5433/pinterest')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost:5433/pinterest') or "postgresql://postgres:password@localhost:5433/pinterest"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_ECHO'] = False
@@ -22,6 +22,18 @@ toolbar = DebugToolbarExtension(app)
 connect_db(app)
 
 
+def get_notifications(user_id):
+    now = datetime.now()
+    user = User.query.get_or_404(user_id);
+    board_ids = []
+    for board in user.boards:
+        board_ids.append(board.id)
+    
+    posts_due = Post.query.filter(Post.board_id.in_(board_ids), Post.completed == False, Post.complete_by < now).order_by(Post.complete_by).all()
+    return posts_due
+
+
+
 #Route Setup 
 @app.before_request
 def add_user_to_g():
@@ -29,6 +41,7 @@ def add_user_to_g():
 
     if "curr_user" in session:
         g.user = User.query.get(session["curr_user"])
+        g.now = datetime.now()
 
     else:
         g.user = None
@@ -58,7 +71,8 @@ def readable_date(list):
 def home_page():
     if g.user:
         form = AddBoardForm()
-        return render_template("user_home.html", form=form)
+        notifications = get_notifications(g.user.id)
+        return render_template("user_home.html", form=form, notifications=notifications)
     else:     
         return render_template('home.html')
 
@@ -134,9 +148,10 @@ def show_board(board_id):
     board = Board.query.get_or_404(board_id)
     incomplete_posts = Post.query.filter(Post.board_id == board_id, Post.completed == False).order_by(Post.complete_by).all()
     completed_posts = Post.query.filter(Post.board_id == board_id, Post.completed == True).all()
-    dated_posts = readable_date(incomplete_posts)   
+    dated_posts = readable_date(incomplete_posts)
+    notifications = get_notifications(g.user.id)
 
-    return render_template('board.html', board=board, form=form, posts=dated_posts, completed_posts=completed_posts)
+    return render_template('board.html', board=board, form=form, posts=dated_posts, completed_posts=completed_posts, notifications=notifications)
 
 @app.route("/boards/add", methods=["POST"])
 def add_board():
@@ -179,7 +194,8 @@ def edit_board(board_id):
         return redirect("/")
     
     else:
-        return render_template('edit_board.html', board=board, form=form)
+        notifications = get_notifications(g.user.id)
+        return render_template('edit_board.html', board=board, form=form, notifications=notifications)
 
 @app.route("/boards/<int:board_id>/delete")
 def delete_board(board_id):
@@ -288,7 +304,8 @@ def edit_post(board_id, post_id):
         return redirect(f"/boards/{board_id}")
     
     else:
-        return render_template('edit_post.html', form=form, post=post)
+        notifications = get_notifications(g.user.id)
+        return render_template('edit_post.html', form=form, post=post, notifications=notifications)
 
 
 @app.route("/boards/<int:board_id>/posts/<int:post_id>/delete")

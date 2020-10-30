@@ -29,6 +29,23 @@
                 <li class="nav-item"><a class="nav-link" href="/login"><i class="fas fa-user"></i> Log in</a></li>
                 {% else %}
                 <li class="navbar-text text-light pr-2">Welcome, {{ g.user.first_name }}!</li>
+                <li class="nav-item dropdown text-light">
+                    <a class="btn btn-outline btn-dark dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        {% if notifications %}
+                            <span class="badge badge-warning">{{notifications|length}}</span>
+                        {% endif %}
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        {% if notifications %}
+                            {% for note in notifications %}
+                            <a href="/boards/{{note.board_id}}" class="dropdown-item">"{{ note.title }}" is due. Visit board -></a>
+                            {% endfor %}
+                        {% else %}
+                        <a href="#" class="dropdown-item">No notifications here!</a>
+                        {% endif %}
+                    </div>
+                </li>
                 <li class="nav-item text-light"><a class="nav-link" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 {% endif %}
             </ul>
