@@ -6,11 +6,12 @@ from models import db, connect_db, User, Post, Board
 from datetime import date, datetime
 from secrets import API_KEY, default_image_url
 import requests
+import os
 
 app = Flask(__name__)
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:password@localhost:5433/pinterest'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:password@localhost:5433/pinterest')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_ECHO'] = False
